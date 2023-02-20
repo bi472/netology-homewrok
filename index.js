@@ -1,70 +1,106 @@
 const express = require('express');
-const uuid = require('uuid');
+const {v4: uuid} = require('uuid');
 
-class Todo {
-    constructor(title = "", desc = "", id = uuid()){
-        this.title = title;
-        this.desc = desc;
-        this.id = id;
-    }
-};
+class Book {
+    constructor(
+        id = uuid(),
+        title = "",
+        description = "",
+        authors =  "",
+        favorite = "",
+        fileCover = "",
+        fileName =  ""){
+            this.id = id
+            this.title = title
+            this.description = description
+            this.authors = authors
+            this.favorite = favorite
+            this.fileCover = fileCover
+            this.fileName = fileName
+        }
+}
 
 const stor = {
-    todo: [],
+    book: [
+        new Book(),
+        new Book(),
+    ],
 };
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json())
 
-app.get('/api/todo', (request, response) => {
-    const {todo} = stor;
-    response.json(todo)
+app.get('/api/books', (req, res) => {
+    const {book} = stor;
+    res.json(book)
 })
 
-app.get('/api/todo/:id', (request, response) => {
-    const {todo} = stor;
-    const {id} = request.params
-    const {index} = todo.findIndex((el) => el.id === id)
-    if(~index)
-        response.json(todo)
-    else {
-        response.status(404);
-        response.json("404 || Not found")
+app.get('/api/books/:id', (req, res) => {
+    const {book} = stor
+    const {id} = req.params
+    const idx = book.findIndex(el => el.id === id)
+
+    if (idx !== -1){
+        res.json(book[idx])
     }
-    
+    else {
+        res.status(404)
+        res.json('404 || Page not found')
+    }
 })
 
-app.post('/api/todo', (request, response) => {
-    const {todo} = stor;
-    const {title, description} = request.body;
-
-    const newTodo = new Todo(title, description);
-    todo.push(newTodo);
-
-    response.status(201);
-    response.json(newTodo);
+app.post('/api/user/login', (req, res) => {
+    res.status(201)
+    res.json({ id: 1, mail: "test@mail.ru" })
 })
 
-app.put('/api/todo/:id', (request, response) => {
-    const {todo} = stor;
-    const {title, description} = request.body;
+app.post('/api/books', (req, res) => {
+    const {book} = stor
+    const {title, description} = req.body
 
-    const index = todo.findIndex(el => el.id === id)
+    const newBook = new Book(uuid(), title, description)
+    book.push(newBook)
 
-    if (~index){
-        todo[index] = new Todo(title, description);
-        response.status(201);
-        response.json(todo[index]);
+    res.status(201)
+    res.json(newBook)
+}
+)
+
+app.put('api/books/:id', (req, res) => {
+    const {book} = stor
+    const {title, description} = req.body
+    const {id} = req.params
+    const idx = book.findIndex(el => el.id === id)
+
+    if (idx !== -1){
+        book[idx] = {
+            ...book[idx],
+            title,
+            description,
+        }
+
+        res.json(book[idx])
     }
     else{
-        response.status(404)
+        res.status(404)
+        res.json('404 || Page not found')
     }
 })
 
-app.delete('/api/todo/:id', (request, response) => {
-    
+app.delete ('/api/books/:id', (req, res) => {
+    const {book} = stor
+    const id = req.params
+    const idx = book.findIndex(el => el.id === id)
+
+    if (idx !== -1){
+        book.splice(idx, 1)
+        res.json('ok')
+    } else {
+        res.status(404)
+        res.json("404 || Page not found")
+    }
 })
 
-const PORT = process.env.port || 3000;
-app.listen(3000);
+const PORT = process.env.PORT || 3000
+app.listen(PORT)
